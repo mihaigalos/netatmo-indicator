@@ -8,7 +8,7 @@ Homepage: https://github.com/mihaigalos/netatmo-indicator
 
 Package: netatmo-indicator
 Architecture: all
-Depends: python3-gi,
+Depends: python-gi,
          gir1.2-appindicator3-0.1,
          ${python:Depends},
          ${misc:Depends}

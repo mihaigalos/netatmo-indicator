@@ -2,16 +2,16 @@
 # -*- coding: utf-8 -*-
 
 #
-# Author: Serg Kolo , contact: 1047481448@qq.com
-# Date: September 27 , 2016
-# Purpose: appindicator for displaying mounted filesystem usage
+# Author: Mihai Galos
+# Date: October 23 , 2018
+# Purpose: indicator for the Netatmo Weather Station
 # Tested on: Ubuntu 16.04 LTS
 #
 #
 # Licensed under The MIT License (MIT).
 # See included LICENSE file or the notice below.
 #
-# Copyright © 2016 Sergiy Kolodyazhnyy
+# Copyright © 2018 Mihai Galos
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
