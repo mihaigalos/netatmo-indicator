@@ -50,9 +50,11 @@ from gi.repository import GLib as glib
 class NetatmoIndicator(object):
 
     def __init__(self):
+        current_folder =  os.getcwd()
+
         self.app = appindicator.Indicator.new(
-            'udisks-indicator', "drive-harddisk-symbolic.svg",
-            appindicator.IndicatorCategory.HARDWARE
+            'netatmo-indicator', current_folder+"/FF4D00-0.0.png",
+            appindicator.IndicatorCategory.SYSTEM_SERVICES
         )
 
         self.app.set_status(appindicator.IndicatorStatus.ACTIVE)
@@ -105,23 +107,15 @@ class NetatmoIndicator(object):
             for item in self.app_menu.get_children():
                 self.app_menu.remove(item)
         self.app_menu = gtk.Menu()
+
         self.mounted_devs = {}
 
-        drive_icon = 'gnome-dev-harddisk'
-
+        degree_sign = u'\N{DEGREE SIGN}'
+        display_string = ""
 
         for k, v in self.netatmo_data.iteritems():
-
-            icon = drive_icon
-
-            contents = [self.app_menu, gtk.ImageMenuItem, icon,
-                        k + ": " + str(v), None, [None]]
-            self.add_menu_item(*contents)
-
-        contents = [self.app_menu, gtk.SeparatorMenuItem, None,
-                    None, None, [None]
-                    ]
-        self.add_menu_item(*contents)
+            display_string = display_string+k+": "+str(v)+degree_sign+" "
+        self.app.set_label(display_string, "")
 
         contents = [self.app_menu, gtk.ImageMenuItem, 'exit',
                     'Quit', self.quit, [None]
@@ -129,6 +123,7 @@ class NetatmoIndicator(object):
         self.add_menu_item(*contents)
 
         self.app.set_menu(self.app_menu)
+
 
     def add_menu_item(self, menu_obj, item_type, image, label, action, args):
 
