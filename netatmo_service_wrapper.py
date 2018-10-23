@@ -65,13 +65,4 @@ class Netatmo:
     def get_data(self):
         access_token = self.get_token()
         devices = self.get_modules_and_devices(access_token)
-        print(devices)
-
-
-def main():
-    netatmo = Netatmo()
-    netatmo.get_data()
-
-
-if __name__ == '__main__':
-    main()
+        return devices
