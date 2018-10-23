@@ -1,0 +1,15 @@
+Source: netatmo-indicator
+Section: gnome
+Priority: extra
+Maintainer: Mihai Galos <mihaigalos@gmail.com>
+Build-Depends: debhelper (>= 9)
+Standards-Version: 3.9.8
+Homepage: https://github.com/mihaigalos/netatmo-indicator
+
+Package: netatmo-indicator
+Architecture: all
+Depends: python3-gi,
+         gir1.2-appindicator3-0.1,
+         ${python:Depends},
+         ${misc:Depends}
+Description: Indicator for the Netatmo Weather Station

@@ -1,0 +1,8 @@
+[Desktop Entry]
+Version=1.0
+Name=Netatmo Indicator
+Comment=Indicator for the Netatmo Weather Station
+Exec=netatmo-indicator
+Type=Application
+Icon=drive-harddisk-symbolic.svg
+Terminal=false
