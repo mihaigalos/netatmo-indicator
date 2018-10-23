@@ -34,21 +34,17 @@
 from netatmo_service_wrapper import Netatmo
 import os
 import json
-import math
-import dbus
-import shutil
-import copy
-import subprocess
-from os import statvfs
+
+import gi
+gi.require_version('Notify', '0.7')
+gi.require_version('AppIndicator3', '0.1')
+gi.require_version('Gtk', '3.0')
+
 from gi.repository import Notify
 from gi.repository import Gio
 from gi.repository import Gtk as gtk
 from gi.repository import AppIndicator3 as appindicator
 from gi.repository import GLib as glib
-import gi
-gi.require_version('AppIndicator3', '0.1')
-gi.require_version('Notify', '0.7')
-# from collections import OrderedDict
 
 
 class NetatmoIndicator(object):
@@ -81,7 +77,6 @@ class NetatmoIndicator(object):
         self.update()
 
     def run(self):
-        """ Launches the indicator """
         try:
             gtk.main()
         except KeyboardInterrupt:
@@ -94,10 +89,6 @@ class NetatmoIndicator(object):
         self.netatmo_data = netatmo.get_data()
 
     def callback(self):
-
-        icon_theme = self.gsettings_get(
-            'org.gnome.desktop.interface', None, 'icon-theme'
-        )
         if self.cache != data:
             if len(self.cache) != len(data):
                 self.make_menu()
@@ -107,11 +98,9 @@ class NetatmoIndicator(object):
         self.update()
 
     def quit(self, *args):
-        """ closes indicator """
         gtk.main_quit()
 
     def make_menu(self, *args):
-        """ generates entries in the indicator"""
         if hasattr(self, 'app_menu'):
             for item in self.app_menu.get_children():
                 self.app_menu.remove(item)
@@ -119,14 +108,7 @@ class NetatmoIndicator(object):
         self.mounted_devs = {}
 
         drive_icon = 'gnome-dev-harddisk'
-        usb_icon = 'media-removable'
-        optical_icon = 'media-optical'
 
-        icon_theme = self.gsettings_get(
-            'org.gnome.desktop.interface', None, 'icon-theme'
-        )
-        if str(icon_theme) == "'ubuntukylin-icon-theme'":
-            usb_icon = 'drive-harddisk-usb'
 
         for k, v in self.netatmo_data.iteritems():
 
@@ -145,12 +127,11 @@ class NetatmoIndicator(object):
                     'Quit', self.quit, [None]
                     ]
         self.add_menu_item(*contents)
-        contents = None
+
         self.app.set_menu(self.app_menu)
 
     def add_menu_item(self, menu_obj, item_type, image, label, action, args):
-        """ dynamic function that can add menu items depending on
-            the item type and other arguments"""
+
         menu_item, icon = None, None
         if item_type is gtk.ImageMenuItem and label:
             menu_item = gtk.ImageMenuItem.new_with_label(label)
@@ -214,7 +195,6 @@ class NetatmoIndicator(object):
                     'Failed writing ' + self.prefs_file,
                     str(e)
                 )
-
 
 def main():
     indicator = NetatmoIndicator()
