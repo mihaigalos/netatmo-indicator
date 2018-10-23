@@ -29,12 +29,12 @@ class Netatmo:
                                        'scope'	: 'read_station'})
 
         access_token = eval(response.text)["access_token"]
-
         return access_token
 
     def get_modules(self, response):
         result = []
         modules = json.loads(response.text)["body"]["modules"]
+
         for module in modules:
             module_name = module["module_name"]
             try:
@@ -45,18 +45,27 @@ class Netatmo:
                 pass
         return {item[0]: item[1] for item in result}
 
-    def get_devices(self, access_token):
+    def get_devices(self, response):
+        result = {}
+        devices = json.loads(response.text)["body"]["devices"]
+
+        module_name = devices[0]["module_name"]
+        temperature = devices[0]["dashboard_data"]["Temperature"]
+
+        return {module_name: temperature}
+
+    def get_modules_and_devices(self, access_token):
         response = requests.post('https://api.netatmo.net//api/devicelist',
                                  data={'access_token' 	: access_token})
         modules = self.get_modules(response)
-        print(modules)
+        devices = self.get_devices(response)
 
-        devices = {}
-        return devices
+        return dict(modules, **devices)
 
     def get_data(self):
         access_token = self.get_token()
-        devices = self.get_devices(access_token)
+        devices = self.get_modules_and_devices(access_token)
+        print(devices)
 
 
 def main():
