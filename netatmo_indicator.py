@@ -48,13 +48,11 @@ from gi.repository import GLib as glib
 
 
 class Menu:
-    def __init__(self, app, netatmo_data, netatmo_exception):
+    def __init__(self, app, netatmo_data, netatmo_exception, netatmo_timestamp):
         if hasattr(self, 'app_menu'):
             for item in self.app_menu.get_children():
                 self.app_menu.remove(item)
         self.app_menu = gtk.Menu()
-
-        self.mounted_devs = {}
 
         display_string = ""
 
@@ -71,10 +69,16 @@ class Menu:
                         str(netatmo_exception), self.quit, [None]]
             self.add_menu_item(*contents)
 
+        contents = [self.app_menu, gtk.ImageMenuItem, 'gtk-info',
+                    'Timestamp: '+netatmo_timestamp, None, [None]
+                    ]
+        self.add_menu_item(*contents)
+
         contents = [self.app_menu, gtk.ImageMenuItem, 'exit',
                     'Quit', self.quit, [None]
                     ]
         self.add_menu_item(*contents)
+
         self.app = app
 
 
@@ -150,7 +154,6 @@ class NetatmoIndicator(object):
             'org.gnome.desktop.interface', None, 'icon-theme'
         )
 
-        self.mounted_devs = {}
         self.fetch_netatmo_data()
 
         self.make_menu()
@@ -159,7 +162,7 @@ class NetatmoIndicator(object):
     def fetch_netatmo_data(self):
         try:
             netatmo = Netatmo()
-            self.netatmo_data = netatmo.get_data()
+            (self.netatmo_data, self.netatmo_timestamp) = netatmo.get_data()
             self.netatmo_exception = None
         except Exception, err:
             self.netatmo_exception = err
@@ -172,23 +175,17 @@ class NetatmoIndicator(object):
             pass
 
     def update(self):
-        timeout = 15 * 60
+        timeout = 5*60
         glib.timeout_add_seconds(timeout, self.callback)
-        self.fetch_netatmo_data()
+
 
     def callback(self):
-        if self.cache != data:
-            if len(self.cache) != len(data):
-                self.make_menu()
-            else:
-                self.update_label(i[0], label)
-            self.cache = data
+        self.fetch_netatmo_data()
+        self.make_menu()
         self.update()
 
-
-
-    def make_menu(self, *args):
-        menu_object = Menu(self.app, self.netatmo_data, self.netatmo_exception)
+    def make_menu(self):
+        menu_object = Menu(self.app, self.netatmo_data, self.netatmo_exception, self.netatmo_timestamp)
         self.app = menu_object.get_app()
         self.app.set_menu(menu_object.get_menu())
 

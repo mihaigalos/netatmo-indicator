@@ -3,7 +3,7 @@
 import requests
 import yaml
 import json
-
+from datetime import datetime
 
 class Credentials:
     def read_credentials(self):
@@ -56,17 +56,25 @@ class Netatmo:
 
         return {module_name: temperature}
 
-    def get_modules_and_devices(self, access_token):
+    def get_timestamp(self, response):
+        timestamp =""
+        devices = json.loads(response.text)["body"]["devices"]
+        raw_timestamp = int(str(devices[0]["dashboard_data"]["time_utc"]))
+        timestamp = datetime.fromtimestamp(raw_timestamp).strftime('%Y-%m-%d %H:%M:%S')
+
+        return timestamp
+
+    def get_timestamped_modules_and_devices(self, access_token):
         response = requests.post('https://api.netatmo.net//api/devicelist',
                                  data={'access_token' 	: access_token})
         if response.ok != True:
             raise Exception(response.text)
         modules = self.get_modules(response)
         devices = self.get_devices(response)
-
-        return dict(modules, **devices)
+        timestamp = self.get_timestamp(response)
+        return (dict(modules, **devices), timestamp)
 
     def get_data(self):
         access_token = self.get_token()
-        devices = self.get_modules_and_devices(access_token)
-        return devices
+        (devices, timestamp) = self.get_timestamped_modules_and_devices(access_token)
+        return (devices, timestamp)
