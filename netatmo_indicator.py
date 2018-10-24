@@ -47,6 +47,75 @@ from gi.repository import AppIndicator3 as appindicator
 from gi.repository import GLib as glib
 
 
+class Menu:
+    def __init__(self, app, netatmo_data, netatmo_exception):
+        if hasattr(self, 'app_menu'):
+            for item in self.app_menu.get_children():
+                self.app_menu.remove(item)
+        self.app_menu = gtk.Menu()
+
+        self.mounted_devs = {}
+
+        display_string = ""
+
+        if netatmo_exception is None:
+            degree_sign = u'\N{DEGREE SIGN}'
+            for k, v in netatmo_data.iteritems():
+                display_string = display_string+k+": "+str(v)+degree_sign+" "
+
+            app.set_label(display_string, "")
+        else:
+            display_string = "Error communicating with Netatmo."
+            app.set_label(display_string, "")
+            contents = [self.app_menu, gtk.ImageMenuItem, 'help-hint',
+                        str(netatmo_exception), self.quit, [None]]
+            self.add_menu_item(*contents)
+
+        contents = [self.app_menu, gtk.ImageMenuItem, 'exit',
+                    'Quit', self.quit, [None]
+                    ]
+        self.add_menu_item(*contents)
+        self.app = app
+
+
+    def add_menu_item(self, menu_obj, item_type, image, label, action, args):
+
+        menu_item, icon = None, None
+        if item_type is gtk.ImageMenuItem and label:
+            menu_item = gtk.ImageMenuItem.new_with_label(label)
+            menu_item.set_always_show_image(True)
+            if '/' in image:
+                icon = gtk.Image.new_from_file(image)
+            else:
+                icon = gtk.Image.new_from_icon_name(image, 48)
+            menu_item.set_image(icon)
+        elif item_type is gtk.ImageMenuItem and not label:
+            menu_item = gtk.ImageMenuItem()
+            menu_item.set_always_show_image(True)
+            if '/' in image:
+                icon = gtk.Image.new_from_file(image)
+            else:
+                icon = gtk.Image.new_from_icon_name(image, 16)
+            menu_item.set_image(icon)
+        elif item_type is gtk.MenuItem:
+            menu_item = gtk.MenuItem(label)
+        elif item_type is gtk.SeparatorMenuItem:
+            menu_item = gtk.SeparatorMenuItem()
+        if action:
+            menu_item.connect('activate', action, *args)
+
+        menu_obj.append(menu_item)
+        menu_item.show()
+
+    def get_menu(self):
+        return self.app_menu
+
+    def get_app(self):
+        return self.app
+
+    def quit(self, *args):
+        gtk.main_quit()
+
 class NetatmoIndicator(object):
 
     def __init__(self):
@@ -73,7 +142,6 @@ class NetatmoIndicator(object):
 
         self.mounted_devs = {}
         self.fetch_netatmo_data()
-
 
         self.make_menu()
         self.update()
@@ -107,73 +175,13 @@ class NetatmoIndicator(object):
             self.cache = data
         self.update()
 
-    def quit(self, *args):
-        gtk.main_quit()
+
 
     def make_menu(self, *args):
-        if hasattr(self, 'app_menu'):
-            for item in self.app_menu.get_children():
-                self.app_menu.remove(item)
-        self.app_menu = gtk.Menu()
+        menu_object = Menu(self.app, self.netatmo_data, self.netatmo_exception)
+        self.app = menu_object.get_app()
+        self.app.set_menu(menu_object.get_menu())
 
-        self.mounted_devs = {}
-
-        display_string = ""
-
-        if self.netatmo_exception is None:
-            degree_sign = u'\N{DEGREE SIGN}'
-            for k, v in self.netatmo_data.iteritems():
-                display_string = display_string+k+": "+str(v)+degree_sign+" "
-
-            self.app.set_label(display_string, "")
-        else:
-            display_string = "Error communicating with Netatmo."
-            self.app.set_label(display_string, "")
-            contents = [self.app_menu, gtk.ImageMenuItem, 'help-hint',
-                        str(self.netatmo_exception), self.quit, [None]]
-            self.add_menu_item(*contents)
-
-        contents = [self.app_menu, gtk.ImageMenuItem, 'exit',
-                    'Quit', self.quit, [None]
-                    ]
-        self.add_menu_item(*contents)
-
-        self.app.set_menu(self.app_menu)
-
-
-    def add_menu_item(self, menu_obj, item_type, image, label, action, args):
-
-        menu_item, icon = None, None
-        if item_type is gtk.ImageMenuItem and label:
-            menu_item = gtk.ImageMenuItem.new_with_label(label)
-            menu_item.set_always_show_image(True)
-            if '/' in image:
-                icon = gtk.Image.new_from_file(image)
-            else:
-                icon = gtk.Image.new_from_icon_name(image, 48)
-            menu_item.set_image(icon)
-        elif item_type is gtk.ImageMenuItem and not label:
-            menu_item = gtk.ImageMenuItem()
-            menu_item.set_always_show_image(True)
-            if '/' in image:
-                icon = gtk.Image.new_from_file(image)
-            else:
-                icon = gtk.Image.new_from_icon_name(image, 16)
-            menu_item.set_image(icon)
-        elif item_type is gtk.MenuItem:
-            menu_item = gtk.MenuItem(label)
-        elif item_type is gtk.SeparatorMenuItem:
-            menu_item = gtk.SeparatorMenuItem()
-        if action:
-            menu_item.connect('activate', action, *args)
-
-        # small addition for this specific indicator
-        if label:
-            if 'Partition' and 'Usage' in label:
-                self.mounted_devs[label] = menu_item
-
-        menu_obj.append(menu_item)
-        menu_item.show()
 
     def gsettings_get(self, schema, path, key):
         """utility: get value of gsettings schema"""
