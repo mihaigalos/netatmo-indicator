@@ -162,7 +162,7 @@ class NetatmoIndicator(object):
     def fetch_netatmo_data(self):
         NetatmoContainer = namedtuple("NetatmoContainer", "data timestamp exception")
         try:
-            netatmo = Netatmo()
+            netatmo = Netatmo("../netatmo-credentials.yaml")
             (data, timestamp) = netatmo.get_data()
             exception = None
             self.netatmo = NetatmoContainer(data, timestamp, exception)
