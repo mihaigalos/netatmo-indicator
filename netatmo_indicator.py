@@ -34,6 +34,8 @@
 from netatmo_service_wrapper import Netatmo
 import os
 import json
+import yaml
+
 
 import gi
 gi.require_version('Notify', '0.7')
@@ -46,6 +48,53 @@ from gi.repository import Gtk as gtk
 from gi.repository import AppIndicator3 as appindicator
 from gi.repository import GLib as glib
 from collections import namedtuple
+
+
+
+class EntryWindow(gtk.Window):
+
+    def __init__(self):
+        gtk.Window.__init__(self, title="Settings")
+        self.set_border_width(6)
+        #self.set_size_request(200, 100)
+        self.set_default_size(300, 100)
+
+        self.timeout_id = None
+
+        #label = gtk.Label("Location of the credentials file: ")
+        #self.add(label)
+
+        vbox = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
+        self.add(vbox)
+
+        self.label = gtk.Label("Config file: ~/.netatmo-indicator-preferences.yaml")
+        vbox.pack_start(self.label, True, True, 0)
+
+
+        hbox = gtk.Box(spacing=6)
+        vbox.pack_start(hbox, True, True, 0)
+
+        self.ok_button = gtk.Button("Ok")
+        self.ok_button.connect("pressed", self.on_ok_button_pressed)
+
+        hbox.pack_start(self.ok_button, True, True, 0)
+
+        self.cancel_button = gtk.Button("Cancel")
+        self.cancel_button.connect("pressed", self.on_cancel_button_pressed)
+
+        hbox.pack_start(self.cancel_button, True, True, 0)
+
+
+        self.add(hbox)
+        self.show_all()
+        pass
+
+    def on_ok_button_pressed(self, button):
+        pass
+
+    def on_cancel_button_pressed(self, button):
+        self.hide()
+
 
 class Menu:
     def __init__(self, app, netatmo):
@@ -69,8 +118,14 @@ class Menu:
                         str(netatmo.exception), self.quit, [None]]
             self.add_menu_item(*contents)
 
+
         contents = [self.app_menu, gtk.ImageMenuItem, 'gtk-info',
                     'Timestamp: '+netatmo.timestamp, None, [None]
+                    ]
+        self.add_menu_item(*contents)
+
+        contents = [self.app_menu, gtk.ImageMenuItem, 'gtk-preferences',
+                    'Settings', self.on_settings_clicked, [None]
                     ]
         self.add_menu_item(*contents)
 
@@ -81,6 +136,8 @@ class Menu:
 
         self.app = app
 
+    def on_settings_clicked(self, *args):
+        entry_window = EntryWindow()
 
     def add_menu_item(self, menu_obj, item_type, image, label, action, args):
         menu_item = self.create_menu_item(action, args, image, item_type, label)
@@ -144,7 +201,7 @@ class NetatmoIndicator(object):
 
         self.user_home = os.path.expanduser('~')
         self.prefs_file = os.path.join(
-            self.user_home, ".netatmo-indicator-preferences.json")
+            self.user_home, ".netatmo-indicator-preferences.yaml")
         self.prefs = self.read_prefs_file()
 
         self.note = Notify.Notification.new(__file__, None, None)
@@ -162,7 +219,7 @@ class NetatmoIndicator(object):
     def fetch_netatmo_data(self):
         NetatmoContainer = namedtuple("NetatmoContainer", "data timestamp exception")
         try:
-            netatmo = Netatmo("../netatmo-credentials.yaml")
+            netatmo = Netatmo(self.prefs["credentials_file"])
             (data, timestamp) = netatmo.get_data()
             exception = None
             self.netatmo = NetatmoContainer(data, timestamp, exception)
@@ -205,15 +262,19 @@ class NetatmoIndicator(object):
         return gsettings.get_value(key)
 
     def read_prefs_file(self, *args):
-        default = {'fields': [True] * 5, 'autostart': False}
-        if not os.path.exists(self.prefs_file):
-            return default
 
-        with open(self.prefs_file) as f:
+        if os.path.exists(self.prefs_file):
             try:
-                return json.load(f)
-            except:
-                return default
+                with open(self.prefs_file) as f:
+                    return yaml.load(f)
+            except yaml.YAMLError as exc:
+                raise Exception("File does not exist: "+str(self.prefs_file))
+        else:
+            data_to_write = {"credentials_file" : os.path.join(self.user_home, ".netatmo-credentials.yaml") }
+            with open(self.prefs_file, "w") as outfile:
+                yaml.dump(data_to_write, outfile, default_flow_style=False)
+
+
 
     def write_prefs_file(self, *args):
         with open(self.prefs_file, 'w') as f:
