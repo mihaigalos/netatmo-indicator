@@ -79,33 +79,43 @@ class Menu:
 
 
     def add_menu_item(self, menu_obj, item_type, image, label, action, args):
+        menu_item = self.create_menu_item(action, args, image, item_type, label)
+        menu_obj.append(menu_item)
+        menu_item.show()
 
-        menu_item, icon = None, None
+    def create_menu_item(self, action, args, image, item_type, label):
+
         if item_type is gtk.ImageMenuItem and label:
-            menu_item = gtk.ImageMenuItem.new_with_label(label)
-            menu_item.set_always_show_image(True)
-            if '/' in image:
-                icon = gtk.Image.new_from_file(image)
-            else:
-                icon = gtk.Image.new_from_icon_name(image, 48)
-            menu_item.set_image(icon)
+            menu_item = self.create_menu_item_image_and_label(image, label)
         elif item_type is gtk.ImageMenuItem and not label:
-            menu_item = gtk.ImageMenuItem()
-            menu_item.set_always_show_image(True)
-            if '/' in image:
-                icon = gtk.Image.new_from_file(image)
-            else:
-                icon = gtk.Image.new_from_icon_name(image, 16)
-            menu_item.set_image(icon)
+            menu_item = self.create_menu_item_image(image)
         elif item_type is gtk.MenuItem:
             menu_item = gtk.MenuItem(label)
         elif item_type is gtk.SeparatorMenuItem:
             menu_item = gtk.SeparatorMenuItem()
         if action:
             menu_item.connect('activate', action, *args)
+        return menu_item
 
-        menu_obj.append(menu_item)
-        menu_item.show()
+    def create_menu_item_image(self, image):
+        menu_item = gtk.ImageMenuItem()
+        menu_item.set_always_show_image(True)
+        if '/' in image:
+            icon = gtk.Image.new_from_file(image)
+        else:
+            icon = gtk.Image.new_from_icon_name(image, 16)
+        menu_item.set_image(icon)
+        return menu_item
+
+    def create_menu_item_image_and_label(self, image, label):
+        menu_item = gtk.ImageMenuItem.new_with_label(label)
+        menu_item.set_always_show_image(True)
+        if '/' in image:
+            icon = gtk.Image.new_from_file(image)
+        else:
+            icon = gtk.Image.new_from_icon_name(image, 48)
+        menu_item.set_image(icon)
+        return menu_item
 
     def get_menu(self):
         return self.app_menu
@@ -122,7 +132,7 @@ class NetatmoIndicator(object):
         current_folder =  os.getcwd()
 
         self.app = appindicator.Indicator.new(
-            'netatmo-indicator', current_folder+"/FF4D00-0.0.png",
+            'netatmo-indicator', current_folder + "/FF4D00-0.0.png",
             appindicator.IndicatorCategory.SYSTEM_SERVICES
         )
 
