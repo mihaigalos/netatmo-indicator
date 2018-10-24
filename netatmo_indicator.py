@@ -56,13 +56,9 @@ class EntryWindow(gtk.Window):
     def __init__(self):
         gtk.Window.__init__(self, title="Settings")
         self.set_border_width(6)
-        #self.set_size_request(200, 100)
         self.set_default_size(300, 100)
 
         self.timeout_id = None
-
-        #label = gtk.Label("Location of the credentials file: ")
-        #self.add(label)
 
         vbox = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
         self.add(vbox)
@@ -97,7 +93,7 @@ class EntryWindow(gtk.Window):
 
 
 class Menu:
-    def __init__(self, app, netatmo):
+    def __init__(self, app, netatmo, aliases):
         if hasattr(self, 'app_menu'):
             for item in self.app_menu.get_children():
                 self.app_menu.remove(item)
@@ -108,6 +104,8 @@ class Menu:
         if netatmo.exception is None:
             degree_sign = u'\N{DEGREE SIGN}'
             for k, v in netatmo.data.iteritems():
+                if k in aliases:
+                    k = aliases[k]
                 display_string = display_string+k+": "+str(v)+degree_sign+" "
 
             app.set_label(display_string, "")
@@ -202,6 +200,7 @@ class NetatmoIndicator(object):
         self.user_home = os.path.expanduser('~')
         self.prefs_file = os.path.join(
             self.user_home, ".netatmo-indicator-preferences.yaml")
+
         self.prefs = self.read_prefs_file()
 
         self.note = Notify.Notification.new(__file__, None, None)
@@ -244,11 +243,12 @@ class NetatmoIndicator(object):
 
     def callback(self):
         self.fetch_netatmo_data()
+
         self.make_menu()
         self.update()
 
     def make_menu(self):
-        menu_object = Menu(self.app, self.netatmo)
+        menu_object = Menu(self.app, self.netatmo, self.prefs["aliases"])
         self.app = menu_object.get_app()
         self.app.set_menu(menu_object.get_menu())
 
@@ -270,18 +270,17 @@ class NetatmoIndicator(object):
             except yaml.YAMLError as exc:
                 raise Exception("File does not exist: "+str(self.prefs_file))
         else:
-            data_to_write = {"credentials_file" : os.path.join(self.user_home, ".netatmo-credentials.yaml") }
+            data_to_write = {"credentials_file" : os.path.join(self.user_home, ".netatmo-credentials.yaml"), "aliases" :"-"}
             with open(self.prefs_file, "w") as outfile:
                 yaml.dump(data_to_write, outfile, default_flow_style=False)
+            return yaml.load(f)
 
 
 
     def write_prefs_file(self, *args):
         with open(self.prefs_file, 'w') as f:
             try:
-                json.dump(self.prefs, f,
-                          indent=4, sort_keys=True
-                          )
+                json.dump(self.prefs, f,indent=4, sort_keys=True )
             except Exception as e:
                 self.send_notif(
                     self.note,
