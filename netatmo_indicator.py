@@ -45,10 +45,10 @@ from gi.repository import Gio
 from gi.repository import Gtk as gtk
 from gi.repository import AppIndicator3 as appindicator
 from gi.repository import GLib as glib
-
+from collections import namedtuple
 
 class Menu:
-    def __init__(self, app, netatmo_data, netatmo_exception, netatmo_timestamp):
+    def __init__(self, app, netatmo):
         if hasattr(self, 'app_menu'):
             for item in self.app_menu.get_children():
                 self.app_menu.remove(item)
@@ -56,9 +56,9 @@ class Menu:
 
         display_string = ""
 
-        if netatmo_exception is None:
+        if netatmo.exception is None:
             degree_sign = u'\N{DEGREE SIGN}'
-            for k, v in netatmo_data.iteritems():
+            for k, v in netatmo.data.iteritems():
                 display_string = display_string+k+": "+str(v)+degree_sign+" "
 
             app.set_label(display_string, "")
@@ -66,11 +66,11 @@ class Menu:
             display_string = "Error communicating with Netatmo."
             app.set_label(display_string, "")
             contents = [self.app_menu, gtk.ImageMenuItem, 'help-hint',
-                        str(netatmo_exception), self.quit, [None]]
+                        str(netatmo.exception), self.quit, [None]]
             self.add_menu_item(*contents)
 
         contents = [self.app_menu, gtk.ImageMenuItem, 'gtk-info',
-                    'Timestamp: '+netatmo_timestamp, None, [None]
+                    'Timestamp: '+netatmo.timestamp, None, [None]
                     ]
         self.add_menu_item(*contents)
 
@@ -160,12 +160,18 @@ class NetatmoIndicator(object):
         self.update()
 
     def fetch_netatmo_data(self):
+        NetatmoContainer = namedtuple("NetatmoContainer", "data timestamp exception")
         try:
             netatmo = Netatmo()
-            (self.netatmo_data, self.netatmo_timestamp) = netatmo.get_data()
-            self.netatmo_exception = None
+            (data, timestamp) = netatmo.get_data()
+            exception = None
+            self.netatmo = NetatmoContainer(data, timestamp, exception)
+
         except Exception, err:
-            self.netatmo_exception = err
+            data = {}
+            timestamp="?"
+            exception = err
+            self.netatmo = NetatmoContainer(data, timestamp, exception)
             pass
 
     def run(self):
@@ -185,7 +191,7 @@ class NetatmoIndicator(object):
         self.update()
 
     def make_menu(self):
-        menu_object = Menu(self.app, self.netatmo_data, self.netatmo_exception, self.netatmo_timestamp)
+        menu_object = Menu(self.app, self.netatmo)
         self.app = menu_object.get_app()
         self.app.set_menu(menu_object.get_menu())
 
