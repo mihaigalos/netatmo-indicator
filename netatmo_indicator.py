@@ -266,15 +266,18 @@ class NetatmoIndicator(object):
         if os.path.exists(self.prefs_file):
             try:
                 with open(self.prefs_file) as f:
-                    return yaml.load(f)
+                    result = yaml.load(f)
+                    f.close()
+                    return result
             except yaml.YAMLError as exc:
                 raise Exception("File does not exist: "+str(self.prefs_file))
         else:
-            data_to_write = {"credentials_file" : os.path.join(self.user_home, ".netatmo-credentials.yaml"), "aliases" :"-"}
+            data_to_write = {"credentials_file" : os.path.join(self.user_home, ".netatmo-credentials.yaml"), "aliases" : {}}
             with open(self.prefs_file, "w") as outfile:
                 yaml.dump(data_to_write, outfile, default_flow_style=False)
-            return yaml.load(f)
 
+            with open(self.prefs_file) as infile:
+                return yaml.load(infile)
 
 
     def write_prefs_file(self, *args):
