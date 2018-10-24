@@ -28,6 +28,8 @@ class Netatmo:
                                        'password' 		: credentials["pass"],
                                        'scope'	: 'read_station'})
 
+        if response.ok != True:
+            raise Exception(response.text)
         access_token = eval(response.text)["access_token"]
         return access_token
 
@@ -57,6 +59,8 @@ class Netatmo:
     def get_modules_and_devices(self, access_token):
         response = requests.post('https://api.netatmo.net//api/devicelist',
                                  data={'access_token' 	: access_token})
+        if response.ok != True:
+            raise Exception(response.text)
         modules = self.get_modules(response)
         devices = self.get_devices(response)
 

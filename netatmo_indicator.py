@@ -72,11 +72,20 @@ class NetatmoIndicator(object):
         )
 
         self.mounted_devs = {}
+        self.fetch_netatmo_data()
 
-        netatmo = Netatmo()
-        self.netatmo_data = netatmo.get_data()
+
         self.make_menu()
         self.update()
+
+    def fetch_netatmo_data(self):
+        try:
+            netatmo = Netatmo()
+            self.netatmo_data = netatmo.get_data()
+            self.netatmo_exception = None
+        except Exception, err:
+            self.netatmo_exception = err
+            pass
 
     def run(self):
         try:
@@ -87,8 +96,7 @@ class NetatmoIndicator(object):
     def update(self):
         timeout = 15 * 60
         glib.timeout_add_seconds(timeout, self.callback)
-        netatmo = Netatmo()
-        self.netatmo_data = netatmo.get_data()
+        self.fetch_netatmo_data()
 
     def callback(self):
         if self.cache != data:
@@ -110,12 +118,20 @@ class NetatmoIndicator(object):
 
         self.mounted_devs = {}
 
-        degree_sign = u'\N{DEGREE SIGN}'
         display_string = ""
 
-        for k, v in self.netatmo_data.iteritems():
-            display_string = display_string+k+": "+str(v)+degree_sign+" "
-        self.app.set_label(display_string, "")
+        if self.netatmo_exception is None:
+            degree_sign = u'\N{DEGREE SIGN}'
+            for k, v in self.netatmo_data.iteritems():
+                display_string = display_string+k+": "+str(v)+degree_sign+" "
+
+            self.app.set_label(display_string, "")
+        else:
+            display_string = "Error communicating with Netatmo."
+            self.app.set_label(display_string, "")
+            contents = [self.app_menu, gtk.ImageMenuItem, 'help-hint',
+                        str(self.netatmo_exception), self.quit, [None]]
+            self.add_menu_item(*contents)
 
         contents = [self.app_menu, gtk.ImageMenuItem, 'exit',
                     'Quit', self.quit, [None]
