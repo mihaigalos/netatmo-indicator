@@ -49,56 +49,108 @@ from gi.repository import AppIndicator3 as appindicator
 from gi.repository import GLib as glib
 from collections import namedtuple
 
+from netatmo_service_wrapper import Credentials
 
 
 class EntryWindow(gtk.Window):
 
-    def __init__(self):
+    def __init__(self, credentials, prefs, callback_on_config_changed):
         gtk.Window.__init__(self, title="Settings")
+
+        self.callback_on_config_changed = callback_on_config_changed
+
+        self.metadata = {}
+        self.metadata.update ( {"credentials" : credentials})
+        self.metadata.update ( {"prefs" : prefs})
+        self.metadata.update ({"ui": {}})
+
         self.set_border_width(6)
         self.set_default_size(300, 100)
 
         self.timeout_id = None
 
-        vbox = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
-        self.add(vbox)
+        self.vbox = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
+        self.add(self.vbox)
 
         self.label = gtk.Label("Config file: ~/.netatmo-indicator-preferences.yaml")
-        vbox.pack_start(self.label, True, True, 0)
+        self.vbox.pack_start(self.label, True, True, 0)
 
+
+        for k,v in credentials.iteritems():
+            self.label_entry(k, v, self.vbox)
+
+        for k,v in prefs.iteritems():
+            if type(prefs[k]) is not dict:
+                self.label_entry(k, v, self.vbox)
 
         hbox = gtk.Box(spacing=6)
-        vbox.pack_start(hbox, True, True, 0)
+        self.vbox.pack_start(hbox, True, True, 0)
 
-        self.ok_button = gtk.Button("Ok")
-        self.ok_button.connect("pressed", self.on_ok_button_pressed)
-
-        hbox.pack_start(self.ok_button, True, True, 0)
+        self.save_button = gtk.Button("Save")
+        self.save_button.connect("pressed", self.on_save_button_pressed)
+        hbox.pack_start(self.save_button, True, True, 0)
 
         self.cancel_button = gtk.Button("Cancel")
         self.cancel_button.connect("pressed", self.on_cancel_button_pressed)
-
         hbox.pack_start(self.cancel_button, True, True, 0)
-
 
         self.add(hbox)
         self.show_all()
         pass
 
-    def on_ok_button_pressed(self, button):
-        pass
+    def label_entry(self, label_name, label_value, parent):
+        hbox = gtk.Box(spacing=6)
+        parent.add(hbox)
+
+        entry = gtk.Entry()
+        entry.set_width_chars(50)
+        entry.set_text(label_value)
+        hbox.pack_end(entry, False, False, 0)
+
+        label = gtk.Label(label_name)
+        hbox.pack_end(label, False, False, 0)
+
+        self.metadata["ui"].update({label_name : entry})
+
+    def on_save_button_pressed(self, button):
+
+        data_to_write = {}
+
+        credentials_file =self.metadata["ui"]["credentials_file"].get_text()
+        data_to_write.update({"credentials_file": credentials_file})
+        preferences_file = os.path.join(os.path.expanduser('~'), ".netatmo-indicator-preferences.yaml")
+
+        credentials = {}
+
+        for k,v in self.metadata["ui"].iteritems():
+            if "credentials_file" != k:
+                credentials.update({k : v.get_text()})
+
+
+        with open(preferences_file, "w+") as outfile:
+            yaml.dump(data_to_write, outfile, default_flow_style=False)
+
+        with open(credentials_file, "w+") as outfile:
+            yaml.dump(credentials, outfile, default_flow_style=False)
+
+        self.hide()
+        self.callback_on_config_changed()
 
     def on_cancel_button_pressed(self, button):
         self.hide()
 
 
 class Menu:
-    def __init__(self, app, netatmo, aliases):
+    def __init__(self, app, netatmo, aliases, credentials, prefs, callback_on_config_changed):
+
+        self.callback_on_config_changed = callback_on_config_changed
+
         if hasattr(self, 'app_menu'):
             for item in self.app_menu.get_children():
                 self.app_menu.remove(item)
         self.app_menu = gtk.Menu()
-
+        self.credentials = credentials
+        self.prefs = prefs
         display_string = ""
 
         if netatmo.exception is None:
@@ -135,7 +187,7 @@ class Menu:
         self.app = app
 
     def on_settings_clicked(self, *args):
-        entry_window = EntryWindow()
+        entry_window = EntryWindow(self.credentials, self.prefs, self.on_config_changed)
 
     def add_menu_item(self, menu_obj, item_type, image, label, action, args):
         menu_item = self.create_menu_item(action, args, image, item_type, label)
@@ -185,6 +237,9 @@ class Menu:
     def quit(self, *args):
         gtk.main_quit()
 
+    def on_config_changed(self):
+        self.callback_on_config_changed()
+
 class NetatmoIndicator(object):
 
     def __init__(self):
@@ -201,8 +256,6 @@ class NetatmoIndicator(object):
         self.prefs_file = os.path.join(
             self.user_home, ".netatmo-indicator-preferences.yaml")
 
-        self.prefs = self.read_prefs_file()
-
         self.note = Notify.Notification.new(__file__, None, None)
         Notify.init(__file__)
 
@@ -216,14 +269,21 @@ class NetatmoIndicator(object):
         self.update()
 
     def fetch_netatmo_data(self):
+
+        self.prefs = self.read_prefs_file()
+
+        if "aliases" not in self.prefs:
+            self.prefs.update({"aliases": {}})
         NetatmoContainer = namedtuple("NetatmoContainer", "data timestamp exception")
         try:
+            self.credentials = Credentials().read_credentials(self.prefs["credentials_file"])
             netatmo = Netatmo(self.prefs["credentials_file"])
             (data, timestamp) = netatmo.get_data()
             exception = None
             self.netatmo = NetatmoContainer(data, timestamp, exception)
 
         except Exception, err:
+            self.credentials={}
             data = {}
             timestamp="?"
             exception = err
@@ -248,7 +308,7 @@ class NetatmoIndicator(object):
         self.update()
 
     def make_menu(self):
-        menu_object = Menu(self.app, self.netatmo, self.prefs["aliases"])
+        menu_object = Menu(self.app, self.netatmo, self.prefs["aliases"], self.credentials, self.prefs, self.callback)
         self.app = menu_object.get_app()
         self.app.set_menu(menu_object.get_menu())
 
