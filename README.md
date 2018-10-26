@@ -19,3 +19,18 @@ aliases:
 
 ## Screenshots
 ![alt text](screenshots/netatmo-indicator-screenshot.png)
+
+## Deployment [Self Note]
+This is a self note. You do not need this for normal indicator usage.
+##### Check if key already available
+`gpg --list-secret-keys`
+
+##### Generate key if not available
+```
+gpg --gen-key
+gpg -a --output ~/.gnupg/mihaigalos.gpg --export 'Mihai Galos'
+gpg --import ~/.gnupg/mihaigalos.gpg
+```
+
+##### Debian Package Generation
+`dpkg-buildpackage -b -pgpg -kmihaigalos@gmail.com`
