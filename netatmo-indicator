@@ -36,6 +36,8 @@ import os
 import json
 import yaml
 
+import shutil
+
 import gi
 gi.require_version('Notify', '0.7')
 gi.require_version('AppIndicator3', '0.1')
@@ -156,12 +158,30 @@ class EntryWindow(gtk.Window):
         with open(credentials_file, "w+") as outfile:
             yaml.dump(credentials, outfile, default_flow_style=False)
 
+
+
     def construct_data_to_write(self):
         data_to_write = {}
+
+        is_autostart = self.metadata["ui"]["Autostart"].get_active()
+
         credentials_file = self.metadata["ui"]["credentials_file"].get_text()
         data_to_write.update({"credentials_file": credentials_file})
-        data_to_write.update({"Autostart": self.metadata["ui"]["Autostart"].get_active()})
+        data_to_write.update({"Autostart": is_autostart})
         data_to_write.update({"aliases":self.metadata["prefs"]["aliases"]})
+
+        desktop_file = '.config/autostart/netatmo-indicator.desktop'
+        full_path = os.path.join(
+            os.path.expanduser('~'),
+            desktop_file
+        )
+
+        if is_autostart and not os.path.exists(full_path):
+            original = '/usr/share/applications/netatmo-indicator.desktop'
+            if os.path.exists(original):
+                shutil.copyfile(original, full_path)
+        elif not is_autostart and os.path.exists(full_path):
+            os.unlink(full_path)
 
         preferences_file = os.path.join(os.path.expanduser('~'), ".netatmo-indicator-preferences.yaml")
         credentials = {}
