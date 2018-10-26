@@ -57,47 +57,57 @@ class EntryWindow(gtk.Window):
 
         self.callback_on_config_changed = callback_on_config_changed
 
-        self.metadata = {}
-        self.metadata.update ( {"credentials" : credentials})
-        self.metadata.update ( {"prefs" : prefs})
-        self.metadata.update ({"ui": {}})
+        self.set_parameters()
 
-        self.set_border_width(6)
-        self.set_default_size(300, 100)
-
-        self.timeout_id = None
+        self.update_metadata(credentials, prefs)
 
         self.vbox = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
-        self.add(self.vbox)
 
+        self.add(self.vbox)
+        self.add_config_file_label()
+        self.add_credentials(credentials)
+        self.add_preferences(prefs)
+        self.add_buttons()
+
+        self.show_all()
+
+    def set_parameters(self):
+        self.set_border_width(6)
+        self.set_default_size(300, 100)
+        self.timeout_id = None
+
+    def add_preferences(self, prefs):
+        for k, v in prefs.iteritems():
+            if type(prefs[k]) is not dict:
+                self.label_entry(k, v, self.vbox)
+
+    def add_credentials(self, credentials):
+        if not credentials:
+            credentials = Credentials().make_default()
+        for k, v in credentials.iteritems():
+            self.label_entry(k, v, self.vbox)
+
+    def add_config_file_label(self):
         self.label = gtk.Label("Config file: ~/.netatmo-indicator-preferences.yaml")
         self.label.set_selectable(True)
         self.vbox.pack_start(self.label, True, True, 0)
 
-        if not credentials:
-            credentials = Credentials().make_default()
+    def update_metadata(self, credentials, prefs):
+        self.metadata = {}
+        self.metadata.update({"credentials": credentials})
+        self.metadata.update({"prefs": prefs})
+        self.metadata.update({"ui": {}})
 
-        for k,v in credentials.iteritems():
-            self.label_entry(k, v, self.vbox)
-
-        for k,v in prefs.iteritems():
-            if type(prefs[k]) is not dict:
-                self.label_entry(k, v, self.vbox)
-
+    def add_buttons(self):
         hbox = gtk.Box(spacing=6)
         self.vbox.pack_start(hbox, True, True, 0)
-
         self.save_button = gtk.Button("Save")
         self.save_button.connect("pressed", self.on_save_button_pressed)
         hbox.pack_start(self.save_button, True, True, 0)
-
         self.cancel_button = gtk.Button("Cancel")
         self.cancel_button.connect("pressed", self.on_cancel_button_pressed)
         hbox.pack_start(self.cancel_button, True, True, 0)
-
         self.add(hbox)
-        self.show_all()
-
 
     def label_entry(self, label_name, label_value, parent):
         hbox = gtk.Box(spacing=6)
@@ -151,27 +161,37 @@ class AboutWindow(gtk.Window):
         self.vbox = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
         self.add(self.vbox)
 
-        self.label_author = gtk.Label("(c) Mihai Galos 2018.")
-        self.vbox_author = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
-        self.vbox.add(self.vbox_author)
-        self.vbox_author.pack_start(self.label_author, True, True, 0)
+        self.add_author()
+        self.add_version()
+        self.add_source_webpage()
+        self.add_ok_button()
 
+        self.show_all()
+
+    def add_ok_button(self):
+        self.ok_button = gtk.Button("Ok")
+        self.ok_button.connect("pressed", self.on_ok_button_pressed)
+        self.vbox.pack_start(self.ok_button, False, False, 5)
+
+    def add_source_webpage(self):
+        self.label_source = gtk.Label()
+        self.label_source.set_markup(
+            "<a href=\"https://github.com/mihaigalos/netatmo-indicator\">https://github.com/mihaigalos/netatmo-indicator</a>")
+        self.vbox_source = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
+        self.vbox.add(self.vbox_source)
+        self.vbox_source.pack_start(self.label_source, True, True, 0)
+
+    def add_version(self):
         self.label_version = gtk.Label("v0.1-1")
         self.vbox_version = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
         self.vbox.add(self.vbox_version)
         self.vbox_version.pack_start(self.label_version, True, True, 0)
 
-        self.label_source = gtk.Label()
-        self.label_source.set_markup("<a href=\"https://github.com/mihaigalos/netatmo-indicator\">https://github.com/mihaigalos/netatmo-indicator</a>")
-        self.vbox_source = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
-        self.vbox.add(self.vbox_source)
-        self.vbox_source.pack_start(self.label_source, True, True, 0)
-
-        self.ok_button = gtk.Button("Ok")
-        self.ok_button.connect("pressed", self.on_ok_button_pressed)
-        self.vbox.pack_start(self.ok_button, False, False, 5)
-
-        self.show_all()
+    def add_author(self):
+        self.label_author = gtk.Label("(c) Mihai Galos 2018.")
+        self.vbox_author = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
+        self.vbox.add(self.vbox_author)
+        self.vbox_author.pack_start(self.label_author, True, True, 0)
 
     def on_ok_button_pressed(self, *args):
         self.hide()
