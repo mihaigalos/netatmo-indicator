@@ -34,3 +34,14 @@ gpg --import ~/.gnupg/mihaigalos.gpg
 
 ##### Debian Package Generation
 `dpkg-buildpackage -b -pgpg -kmihaigalos@gmail.com`
+
+##### Prepare for upload to Launchpad
+###### Prerequisites:
+* Ubuntu One account active
+* gpg key used to sign the debian uploaded to Ubuntu Keyserver:
+ - `gpg --list-keys`
+ - `gpg  --keyserver hkp://keyserver.ubuntu.com:11371 --send-keys <KEY>`)
+* OpenPGP keys displays the key
+
+###### Upload:
+`dput ppa:mihaigalos/ppa netatmo-indicator_0.1-1_amd64.changes`
