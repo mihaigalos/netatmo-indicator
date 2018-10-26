@@ -6,6 +6,15 @@ import json
 from datetime import datetime
 
 class Credentials:
+    def make_default(self):
+        result = {
+            "clientId" : "",
+            "clientSecret" : "",
+            "email" : "",
+            "password" : ""
+        }
+        return result
+
     def read_credentials(self, credentials_file):
         """ Read in yaml file containing the following format:
             clientId: <generated from netatmo. i.e. :abcde3f167e482a63d812345>
@@ -16,7 +25,8 @@ class Credentials:
             with open(credentials_file,'r') as stream:
                 return yaml.load(stream)
         except yaml.YAMLError as exc:
-            print(exc)
+            pass
+            #print(exc)
 
 
 class Netatmo:
@@ -25,13 +35,12 @@ class Netatmo:
 
     def get_token(self):
         credentials = Credentials().read_credentials(self.credentials_file)
-
         response = requests.post('https://api.netatmo.net/oauth2/token',
                                  data={'grant_type' 	: 'password',
                                        'client_id'		: credentials["clientId"],
                                        'client_secret'	: credentials["clientSecret"],
-                                       'username' 		: credentials["userId"],
-                                       'password' 		: credentials["pass"],
+                                       'username' 		: credentials["email"],
+                                       'password' 		: credentials["password"],
                                        'scope'	: 'read_station'})
 
         if response.ok != True:

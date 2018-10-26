@@ -50,7 +50,6 @@ from collections import namedtuple
 
 from netatmo_service_wrapper import Credentials
 
-
 class EntryWindow(gtk.Window):
 
     def __init__(self, credentials, prefs, callback_on_config_changed):
@@ -72,8 +71,11 @@ class EntryWindow(gtk.Window):
         self.add(self.vbox)
 
         self.label = gtk.Label("Config file: ~/.netatmo-indicator-preferences.yaml")
+        self.label.set_selectable(True)
         self.vbox.pack_start(self.label, True, True, 0)
 
+        if not credentials:
+            credentials = Credentials().make_default()
 
         for k,v in credentials.iteritems():
             self.label_entry(k, v, self.vbox)
@@ -95,7 +97,7 @@ class EntryWindow(gtk.Window):
 
         self.add(hbox)
         self.show_all()
-        pass
+
 
     def label_entry(self, label_name, label_value, parent):
         hbox = gtk.Box(spacing=6)
@@ -138,9 +140,44 @@ class EntryWindow(gtk.Window):
     def on_cancel_button_pressed(self, button):
         self.hide()
 
+class AboutWindow(gtk.Window):
+
+    def __init__(self):
+        gtk.Window.__init__(self, title="About")
+
+        self.set_border_width(6)
+        self.set_default_size(300, 100)
+
+        self.vbox = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
+        self.add(self.vbox)
+
+        self.label_author = gtk.Label("(c) Mihai Galos 2018.")
+        self.vbox_author = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
+        self.vbox.add(self.vbox_author)
+        self.vbox_author.pack_start(self.label_author, True, True, 0)
+
+        self.label_version = gtk.Label("v0.1-1")
+        self.vbox_version = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
+        self.vbox.add(self.vbox_version)
+        self.vbox_version.pack_start(self.label_version, True, True, 0)
+
+        self.label_source = gtk.Label()
+        self.label_source.set_markup("<a href=\"https://github.com/mihaigalos/netatmo-indicator\">https://github.com/mihaigalos/netatmo-indicator</a>")
+        self.vbox_source = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
+        self.vbox.add(self.vbox_source)
+        self.vbox_source.pack_start(self.label_source, True, True, 0)
+
+        self.ok_button = gtk.Button("Ok")
+        self.ok_button.connect("pressed", self.on_ok_button_pressed)
+        self.vbox.pack_start(self.ok_button, False, False, 5)
+
+        self.show_all()
+
+    def on_ok_button_pressed(self, *args):
+        self.hide()
 
 class Menu:
-    def __init__(self, app, netatmo, aliases, credentials, prefs, callback_on_config_changed):
+    def __init__(self, app, netatmo, aliases, credentials, prefs, callback_on_config_changed, show_settings):
 
         self.callback_on_config_changed = callback_on_config_changed
 
@@ -178,15 +215,29 @@ class Menu:
                     ]
         self.add_menu_item(*contents)
 
+        contents = [self.app_menu, gtk.ImageMenuItem, 'system-help',
+                    'About', self.on_about_clicked, [None]
+                    ]
+        self.add_menu_item(*contents)
+
+        self.separator = gtk.SeparatorMenuItem()
+        self.app_menu.append(self.separator)
+        self.separator.show()
+
         contents = [self.app_menu, gtk.ImageMenuItem, 'exit',
                     'Quit', self.quit, [None]
                     ]
         self.add_menu_item(*contents)
 
         self.app = app
+        if show_settings:
+            self.on_settings_clicked()
 
     def on_settings_clicked(self, *args):
         entry_window = EntryWindow(self.credentials, self.prefs, self.on_config_changed)
+
+    def on_about_clicked(self, *args):
+        entry_window = AboutWindow()
 
     def add_menu_item(self, menu_obj, item_type, image, label, action, args):
         menu_item = self.create_menu_item(action, args, image, item_type, label)
@@ -264,7 +315,11 @@ class NetatmoIndicator(object):
 
         self.fetch_netatmo_data()
 
-        self.make_menu()
+        show_settings = False
+        if not bool(self.credentials):
+            show_settings = True
+
+        self.make_menu(show_settings)
         self.update()
 
     def fetch_netatmo_data(self):
@@ -306,8 +361,8 @@ class NetatmoIndicator(object):
         self.make_menu()
         self.update()
 
-    def make_menu(self):
-        menu_object = Menu(self.app, self.netatmo, self.prefs["aliases"], self.credentials, self.prefs, self.callback)
+    def make_menu(self, show_settings=False):
+        menu_object = Menu(self.app, self.netatmo, self.prefs["aliases"], self.credentials, self.prefs, self.callback, show_settings)
         self.app = menu_object.get_app()
         self.app.set_menu(menu_object.get_menu())
 
