@@ -36,7 +36,6 @@ import os
 import json
 import yaml
 
-
 import gi
 gi.require_version('Notify', '0.7')
 gi.require_version('AppIndicator3', '0.1')

@@ -1,2 +1,3 @@
-netatmo-indicator usr/bin/
+netatmo_indicator.py usr/bin/
+netatmo_service_wrapper.py usr/bin/
 netatmo-indicator.desktop usr/share/applications/
