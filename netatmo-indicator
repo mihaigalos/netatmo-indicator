@@ -67,6 +67,7 @@ class EntryWindow(gtk.Window):
         self.add_config_file_label()
         self.add_credentials(credentials)
         self.add_preferences(prefs)
+        self.add_autostart(self.vbox, is_autostart = prefs["Autostart"])
         self.add_buttons()
 
         self.show_all()
@@ -76,9 +77,25 @@ class EntryWindow(gtk.Window):
         self.set_default_size(300, 100)
         self.timeout_id = None
 
+    def add_autostart(self,parent, is_autostart):
+
+        hbox = gtk.Box(spacing=6)
+        parent.add(hbox)
+
+
+        switch = gtk.Switch()
+        switch.set_state(is_autostart)
+        hbox.pack_end(switch, False, False, 0)
+
+        label_name = "Autostart"
+        label = gtk.Label(label_name)
+        hbox.pack_end(label, False, False, 0)
+
+        self.metadata["ui"].update({label_name: switch})
+
     def add_preferences(self, prefs):
         for k, v in prefs.iteritems():
-            if type(prefs[k]) is not dict:
+            if type(prefs[k]) is not dict and k != "Autostart":
                 self.label_entry(k, v, self.vbox)
 
     def add_credentials(self, credentials):
@@ -119,33 +136,40 @@ class EntryWindow(gtk.Window):
         hbox.pack_end(entry, False, False, 0)
 
         label = gtk.Label(label_name)
+
         hbox.pack_end(label, False, False, 0)
 
         self.metadata["ui"].update({label_name : entry})
 
     def on_save_button_pressed(self, button):
 
-        data_to_write = {}
+        credentials, credentials_file, data_to_write, preferences_file = self.construct_data_to_write()
 
-        credentials_file =self.metadata["ui"]["credentials_file"].get_text()
-        data_to_write.update({"credentials_file": credentials_file})
-        preferences_file = os.path.join(os.path.expanduser('~'), ".netatmo-indicator-preferences.yaml")
-
-        credentials = {}
-
-        for k,v in self.metadata["ui"].iteritems():
-            if "credentials_file" != k:
-                credentials.update({k : v.get_text()})
-
-
-        with open(preferences_file, "w+") as outfile:
-            yaml.dump(data_to_write, outfile, default_flow_style=False)
-
-        with open(credentials_file, "w+") as outfile:
-            yaml.dump(credentials, outfile, default_flow_style=False)
+        self.write_data(credentials, credentials_file, data_to_write, preferences_file)
 
         self.hide()
         self.callback_on_config_changed()
+
+    def write_data(self, credentials, credentials_file, data_to_write, preferences_file):
+        with open(preferences_file, "w+") as outfile:
+            yaml.dump(data_to_write, outfile, default_flow_style=False)
+        with open(credentials_file, "w+") as outfile:
+            yaml.dump(credentials, outfile, default_flow_style=False)
+
+    def construct_data_to_write(self):
+        data_to_write = {}
+        credentials_file = self.metadata["ui"]["credentials_file"].get_text()
+        data_to_write.update({"credentials_file": credentials_file})
+        data_to_write.update({"Autostart": self.metadata["ui"]["Autostart"].get_active()})
+        data_to_write.update({"aliases":self.metadata["prefs"]["aliases"]})
+
+        preferences_file = os.path.join(os.path.expanduser('~'), ".netatmo-indicator-preferences.yaml")
+        credentials = {}
+        excluded_keys = ["credentials_file", "Autostart"]
+        for k, v in self.metadata["ui"].iteritems():
+            if k not in excluded_keys:
+                credentials.update({k: v.get_text()})
+        return credentials, credentials_file, data_to_write, preferences_file
 
     def on_cancel_button_pressed(self, button):
         self.hide()
@@ -348,6 +372,10 @@ class NetatmoIndicator(object):
 
         if "aliases" not in self.prefs:
             self.prefs.update({"aliases": {}})
+
+        if "Autostart" not in self.prefs:
+            self.prefs.update({"Autostart": False})
+
         NetatmoContainer = namedtuple("NetatmoContainer", "data timestamp exception")
         try:
             self.credentials = Credentials().read_credentials(self.prefs["credentials_file"])
