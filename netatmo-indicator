@@ -360,7 +360,7 @@ class NetatmoIndicator(object):
         current_folder =  os.path.dirname(os.path.abspath(__file__))
 
         self.app = appindicator.Indicator.new(
-            'netatmo-indicator', current_folder + "/one_pixel_wide_icon.png",
+            'netatmo-indicator', "weather-clouds",
             appindicator.IndicatorCategory.SYSTEM_SERVICES
         )
 

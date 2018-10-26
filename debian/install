@@ -1,4 +1,3 @@
 netatmo-indicator usr/bin/
-one_pixel_wide_icon.png usr/bin/
 netatmo_service_wrapper.py usr/bin/
 netatmo-indicator.desktop usr/share/applications/
