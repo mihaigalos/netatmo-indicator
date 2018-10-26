@@ -242,10 +242,10 @@ class Menu:
 class NetatmoIndicator(object):
 
     def __init__(self):
-        current_folder =  os.getcwd()
+        current_folder =  os.path.dirname(os.path.abspath(__file__))
 
         self.app = appindicator.Indicator.new(
-            'netatmo-indicator', current_folder + "/FF4D00-0.0.png",
+            'netatmo-indicator', current_folder + "/one_pixel_wide_icon.png",
             appindicator.IndicatorCategory.SYSTEM_SERVICES
         )
 
