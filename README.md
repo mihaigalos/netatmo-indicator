@@ -1,4 +1,4 @@
-# netatmo-indicator
+netatmo-indicator-screenshot-icon-aliases.pngr
 Ubuntu debian package deployment of a Menubar indicator for the Netatmo Weather Station
 
 ## Installation
@@ -10,7 +10,7 @@ netatmo-indicator &
 ```
 
 ## Screenshots
-![alt text](screenshots/netatmo-indicator-screenshot.png)
+![alt text](screenshots/netatmo-indicator-screenshot-icon-aliases.png)
 
 
 
