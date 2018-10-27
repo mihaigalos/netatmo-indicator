@@ -10,7 +10,7 @@ netatmo-indicator &
 ```
 
 ## Screenshots
-![alt text](screenshots/netatmo-indicator-screenshot-icon-aliases.png)
+![alt text](screenshots/netatmo-indicator-screenshot.png)
 
 
 
