@@ -5,6 +5,8 @@ Ubuntu debian deployment of a Menubar indicator for the Netatmo Weather Station
 ```
 sudo add-apt-repository ppa:mihaigalos/ppa
 sudo apt-get update
+sudo apt install netatmo-indicator
+netatmo-indicator &
 ```
 
 ## Settings
