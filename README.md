@@ -1,4 +1,5 @@
-netatmo-indicator-screenshot-icon-aliases.pngr
+# Netatmo Indicator [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
 Ubuntu debian package deployment of a Menubar indicator for the Netatmo Weather Station
 
 ## Installation
@@ -15,12 +16,12 @@ netatmo-indicator &
 
 
 ## Settings
-The indicator stores its settings in .netatmo-indicator-preferences.yaml, with an additional credentials file
-for netatmo. The credentials' file is reference with the <credentials_file> tag in .netatmo-indicator-preferences.yaml
+The indicator stores its settings in `~/.netatmo-indicator-preferences.yaml`, with an additional credentials file
+for netatmo. The credentials' file is referenced with the <credentials_file> tag in ~/.netatmo-indicator-preferences.yaml
 
 One may edit the credentials directly in the Menu.
 
-If desired, one may edit the .netatmo-indicator-preferences.yaml and add a dictionary of aliases to substitute the
+If desired, one may edit the ~/.netatmo-indicator-preferences.yaml and add a dictionary of aliases to substitute the
 names displayed. Make sure to close the indicator before you manually edit the file.
 
 Example:
