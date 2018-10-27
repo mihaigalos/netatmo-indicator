@@ -1,5 +1,5 @@
 # netatmo-indicator
-Ubuntu debian deployment of a Menubar indicator for the Netatmo Weather Station
+Ubuntu debian package deployment of a Menubar indicator for the Netatmo Weather Station
 
 ## Installation
 ```
@@ -9,6 +9,11 @@ sudo apt install netatmo-indicator
 netatmo-indicator &
 ```
 
+## Screenshots
+![alt text](screenshots/netatmo-indicator-screenshot.png)
+
+
+
 ## Settings
 The indicator stores its settings in .netatmo-indicator-preferences.yaml, with an additional credentials file
 for netatmo. The credentials' file is reference with the <credentials_file> tag in .netatmo-indicator-preferences.yaml
@@ -16,8 +21,9 @@ for netatmo. The credentials' file is reference with the <credentials_file> tag 
 One may edit the credentials directly in the Menu.
 
 If desired, one may edit the .netatmo-indicator-preferences.yaml and add a dictionary of aliases to substitute the
-names displayed, i.e.:
+names displayed. Make sure to close the indicator before you manually edit the file.
 
+Example:
 ```
 aliases:
   Living: In
@@ -25,8 +31,8 @@ aliases:
   Bedroom: Bed
 ```
 
-## Screenshots
-![alt text](screenshots/netatmo-indicator-screenshot.png)
+## A note on credentials
+When the indicator first starts, the user is presented with the settings menu. One needs to fill in his netatmo username, password, cilentId and clientSecret. All this information can be gathered from the user's netatmo profile.
 
 ## Deployment [Self Note]
 This is a self note. You do not need this for normal indicator usage.
