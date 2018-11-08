@@ -58,10 +58,13 @@ The current folder contains i.e. `.git` which we do not want to deploy. We thus 
 
 ```
 (in the git folder)
-mkdir -p ../foo/netatmo-indicator && find . -mindepth 1 -maxdepth 1 -exec cp {netatmo-indicator,*.py,*.desktop,*.md} ../foo/netatmo-indicator \; && cp -r debian ../foo/netatmo-indicator
+current_directory=$(basename "$PWD")
+
+mkdir -p ../foo/${current_directory} && find . -mindepth 1 -maxdepth 1 -exec cp {*indicator,*.py,*.desktop,*.md} ../foo/${current_directory} \; && cp -r debian ../foo/${current_directory}
 cd ../foo
-tar -czvf netatmo-indicator_0.1.orig.tar.gz netatmo-indicator
-cd netatmo-indicator
+tar -czvf ${current_directory}_0.1.orig.tar.gz ${current_directory}
+cd ${current_directory}
+
 dpkg-buildpackage -S -pgpg -kmihaigalos@gmail.com
 ```
 
@@ -74,4 +77,4 @@ dpkg-buildpackage -S -pgpg -kmihaigalos@gmail.com
 * OpenPGP keys displays the key
 
 ###### Upload source:
-`dput ppa:mihaigalos/ppa netatmo-indicator_0.1-1_source.changes`
+`dput ppa:mihaigalos/ppa *source.changes`
