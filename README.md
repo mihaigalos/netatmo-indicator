@@ -10,6 +10,11 @@ sudo apt install netatmo-indicator
 netatmo-indicator &
 ```
 
+## Removal
+```
+sudo apt remove --purge netatmo-indicator
+```
+
 ## Screenshots
 ![alt text](screenshots/netatmo-indicator-screenshot.png)
 
