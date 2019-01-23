@@ -31,26 +31,26 @@
 # LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
+from netatmo_service_wrapper import Credentials
+from collections import namedtuple
+from gi.repository import GLib as glib
+from gi.repository import AppIndicator3 as appindicator
+from gi.repository import Gtk as gtk
+from gi.repository import Gio
+from gi.repository import Notify
 from netatmo_service_wrapper import Netatmo
 import os
 import json
 import yaml
-
 import shutil
+from collections import OrderedDict
+
 
 import gi
 gi.require_version('Notify', '0.7')
 gi.require_version('AppIndicator3', '0.1')
 gi.require_version('Gtk', '3.0')
 
-from gi.repository import Notify
-from gi.repository import Gio
-from gi.repository import Gtk as gtk
-from gi.repository import AppIndicator3 as appindicator
-from gi.repository import GLib as glib
-from collections import namedtuple
-
-from netatmo_service_wrapper import Credentials
 
 class EntryWindow(gtk.Window):
 
@@ -69,7 +69,7 @@ class EntryWindow(gtk.Window):
         self.add_config_file_label()
         self.add_credentials(credentials)
         self.add_preferences(prefs)
-        self.add_autostart(self.vbox, is_autostart = prefs["Autostart"])
+        self.add_autostart(self.vbox, is_autostart=prefs["Autostart"])
         self.add_buttons()
 
         self.show_all()
@@ -79,11 +79,10 @@ class EntryWindow(gtk.Window):
         self.set_default_size(300, 100)
         self.timeout_id = None
 
-    def add_autostart(self,parent, is_autostart):
+    def add_autostart(self, parent, is_autostart):
 
         hbox = gtk.Box(spacing=6)
         parent.add(hbox)
-
 
         switch = gtk.Switch()
         switch.set_state(is_autostart)
@@ -107,7 +106,8 @@ class EntryWindow(gtk.Window):
             self.label_entry(k, v, self.vbox)
 
     def add_config_file_label(self):
-        self.label = gtk.Label("Config file: ~/.netatmo-indicator-preferences.yaml")
+        self.label = gtk.Label(
+            "Config file: ~/.netatmo-indicator-preferences.yaml")
         self.label.set_selectable(True)
         self.vbox.pack_start(self.label, True, True, 0)
 
@@ -141,13 +141,14 @@ class EntryWindow(gtk.Window):
 
         hbox.pack_end(label, False, False, 0)
 
-        self.metadata["ui"].update({label_name : entry})
+        self.metadata["ui"].update({label_name: entry})
 
     def on_save_button_pressed(self, button):
 
         credentials, credentials_file, data_to_write, preferences_file = self.construct_data_to_write()
 
-        self.write_data(credentials, credentials_file, data_to_write, preferences_file)
+        self.write_data(credentials, credentials_file,
+                        data_to_write, preferences_file)
 
         self.hide()
         self.callback_on_config_changed()
@@ -158,8 +159,6 @@ class EntryWindow(gtk.Window):
         with open(credentials_file, "w+") as outfile:
             yaml.dump(credentials, outfile, default_flow_style=False)
 
-
-
     def construct_data_to_write(self):
         data_to_write = {}
 
@@ -168,7 +167,7 @@ class EntryWindow(gtk.Window):
         credentials_file = self.metadata["ui"]["credentials_file"].get_text()
         data_to_write.update({"credentials_file": credentials_file})
         data_to_write.update({"Autostart": is_autostart})
-        data_to_write.update({"aliases":self.metadata["prefs"]["aliases"]})
+        data_to_write.update({"aliases": self.metadata["prefs"]["aliases"]})
 
         desktop_file = '.config/autostart/netatmo-indicator.desktop'
         full_path = os.path.join(
@@ -183,7 +182,8 @@ class EntryWindow(gtk.Window):
         elif not is_autostart and os.path.exists(full_path):
             os.unlink(full_path)
 
-        preferences_file = os.path.join(os.path.expanduser('~'), ".netatmo-indicator-preferences.yaml")
+        preferences_file = os.path.join(os.path.expanduser(
+            '~'), ".netatmo-indicator-preferences.yaml")
         credentials = {}
         excluded_keys = ["credentials_file", "Autostart"]
         for k, v in self.metadata["ui"].iteritems():
@@ -193,6 +193,7 @@ class EntryWindow(gtk.Window):
 
     def on_cancel_button_pressed(self, button):
         self.hide()
+
 
 class AboutWindow(gtk.Window):
 
@@ -221,24 +222,28 @@ class AboutWindow(gtk.Window):
         self.label_source = gtk.Label()
         self.label_source.set_markup(
             "<a href=\"https://github.com/mihaigalos/netatmo-indicator\">https://github.com/mihaigalos/netatmo-indicator</a>")
-        self.vbox_source = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
+        self.vbox_source = gtk.Box(
+            orientation=gtk.Orientation.VERTICAL, spacing=6)
         self.vbox.add(self.vbox_source)
         self.vbox_source.pack_start(self.label_source, True, True, 0)
 
     def add_version(self):
         self.label_version = gtk.Label("v0.1-1")
-        self.vbox_version = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
+        self.vbox_version = gtk.Box(
+            orientation=gtk.Orientation.VERTICAL, spacing=6)
         self.vbox.add(self.vbox_version)
         self.vbox_version.pack_start(self.label_version, True, True, 0)
 
     def add_author(self):
         self.label_author = gtk.Label("(c) Mihai Galos 2018.")
-        self.vbox_author = gtk.Box(orientation=gtk.Orientation.VERTICAL, spacing=6)
+        self.vbox_author = gtk.Box(
+            orientation=gtk.Orientation.VERTICAL, spacing=6)
         self.vbox.add(self.vbox_author)
         self.vbox_author.pack_start(self.label_author, True, True, 0)
 
     def on_ok_button_pressed(self, *args):
         self.hide()
+
 
 class Menu:
     def __init__(self, app, netatmo, aliases, credentials, prefs, callback_on_config_changed, show_settings):
@@ -258,7 +263,8 @@ class Menu:
             for k, v in netatmo.data.iteritems():
                 if k in aliases:
                     k = aliases[k]
-                display_string = display_string+k+": "+str(v)+degree_sign+" "
+                display_string = display_string + \
+                    k + ": " + str(v) + degree_sign + " "
 
             app.set_label(display_string, "")
         else:
@@ -268,9 +274,8 @@ class Menu:
                         str(netatmo.exception), self.quit, [None]]
             self.add_menu_item(*contents)
 
-
         contents = [self.app_menu, gtk.ImageMenuItem, 'gtk-info',
-                    'Timestamp: '+netatmo.timestamp, None, [None]
+                    'Timestamp: ' + netatmo.timestamp, None, [None]
                     ]
         self.add_menu_item(*contents)
 
@@ -298,13 +303,15 @@ class Menu:
             self.on_settings_clicked()
 
     def on_settings_clicked(self, *args):
-        entry_window = EntryWindow(self.credentials, self.prefs, self.on_config_changed)
+        entry_window = EntryWindow(
+            self.credentials, self.prefs, self.on_config_changed)
 
     def on_about_clicked(self, *args):
         entry_window = AboutWindow()
 
     def add_menu_item(self, menu_obj, item_type, image, label, action, args):
-        menu_item = self.create_menu_item(action, args, image, item_type, label)
+        menu_item = self.create_menu_item(
+            action, args, image, item_type, label)
         menu_obj.append(menu_item)
         menu_item.show()
 
@@ -354,10 +361,11 @@ class Menu:
     def on_config_changed(self):
         self.callback_on_config_changed()
 
+
 class NetatmoIndicator(object):
 
     def __init__(self):
-        current_folder =  os.path.dirname(os.path.abspath(__file__))
+        current_folder = os.path.dirname(os.path.abspath(__file__))
 
         self.app = appindicator.Indicator.new(
             'netatmo-indicator', "weather-clouds",
@@ -396,21 +404,40 @@ class NetatmoIndicator(object):
         if "Autostart" not in self.prefs:
             self.prefs.update({"Autostart": False})
 
-        NetatmoContainer = namedtuple("NetatmoContainer", "data timestamp exception")
+        NetatmoContainer = namedtuple(
+            "NetatmoContainer", "data timestamp exception")
         try:
-            self.credentials = Credentials().read_credentials(self.prefs["credentials_file"])
+            self.credentials = Credentials().read_credentials(
+                self.prefs["credentials_file"])
             netatmo = Netatmo(self.prefs["credentials_file"])
             (data, timestamp) = netatmo.get_data()
             exception = None
             self.netatmo = NetatmoContainer(data, timestamp, exception)
-
+            self.write_json(timestamp, data)
         except Exception, err:
-            self.credentials={}
+            self.credentials = {}
             data = {}
-            timestamp="?"
+            timestamp = "?"
             exception = err
             self.netatmo = NetatmoContainer(data, timestamp, exception)
             pass
+
+    def write_json(self, timestamp, data):
+        entry = {timestamp: data}
+        data = {}
+        with open(os.path.join(os.path.expanduser('~'), 'netatmo_data.json')) as f:
+            try:
+                data = json.load(f)
+                data.update(entry)
+            except Exception, err:
+                pass
+            f.close()
+
+        data = {i: data[i] for i in data.keys()[-100:]}
+
+        with open(os.path.join(os.path.expanduser('~'), 'netatmo_data.json'), 'w') as f:
+            json.dump(data, f)
+            f.close()
 
     def run(self):
         try:
@@ -419,9 +446,8 @@ class NetatmoIndicator(object):
             pass
 
     def update(self):
-        timeout = 5*60
+        timeout = 5 * 60
         glib.timeout_add_seconds(timeout, self.callback)
-
 
     def callback(self):
         self.fetch_netatmo_data()
@@ -430,10 +456,10 @@ class NetatmoIndicator(object):
         self.update()
 
     def make_menu(self, show_settings=False):
-        menu_object = Menu(self.app, self.netatmo, self.prefs["aliases"], self.credentials, self.prefs, self.callback, show_settings)
+        menu_object = Menu(
+            self.app, self.netatmo, self.prefs["aliases"], self.credentials, self.prefs, self.callback, show_settings)
         self.app = menu_object.get_app()
         self.app.set_menu(menu_object.get_menu())
-
 
     def gsettings_get(self, schema, path, key):
         """utility: get value of gsettings schema"""
@@ -452,26 +478,27 @@ class NetatmoIndicator(object):
                     f.close()
                     return result
             except yaml.YAMLError as exc:
-                raise Exception("File does not exist: "+str(self.prefs_file))
+                raise Exception("File does not exist: " + str(self.prefs_file))
         else:
-            data_to_write = {"credentials_file" : os.path.join(self.user_home, ".netatmo-credentials.yaml"), "aliases" : {}}
+            data_to_write = {"credentials_file": os.path.join(
+                self.user_home, ".netatmo-credentials.yaml"), "aliases": {}}
             with open(self.prefs_file, "w") as outfile:
                 yaml.dump(data_to_write, outfile, default_flow_style=False)
 
             with open(self.prefs_file) as infile:
                 return yaml.load(infile)
 
-
     def write_prefs_file(self, *args):
         with open(self.prefs_file, 'w') as f:
             try:
-                json.dump(self.prefs, f,indent=4, sort_keys=True )
+                json.dump(self.prefs, f, indent=4, sort_keys=True)
             except Exception as e:
                 self.send_notif(
                     self.note,
                     'Failed writing ' + self.prefs_file,
                     str(e)
                 )
+
 
 def main():
     indicator = NetatmoIndicator()
