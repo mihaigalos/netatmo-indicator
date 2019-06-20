@@ -40,6 +40,24 @@ aliases:
 ## A note on credentials
 When the indicator first starts, the user is presented with the settings menu. One needs to fill in his netatmo username, password, cilentId and clientSecret. All this information can be gathered from the user's netatmo profile.
 
+## Integration with I3WM
+One may choose to use the purely awesome i3 window manager. Change the `/etc/i3status.conf` so it contains:
+
+```
+general {
+        colors = true
+        interval = 60
+        output_format = "i3bar"
+}
+```
+
+Next, edit your `/.config/i3/config` remove the `bar` block and replace it with:
+```
+bar {
+    status_command <path_to_netatmo_indicator>/i3wm_wrapper.sh
+}
+```
+
 ## Deployment [Self Note]
 This is a self note. You do not need this for normal indicator usage.
 ##### Check if key already available
