@@ -29,11 +29,13 @@ def constructOutputString():
         if line[0] == ',':
             line = line[1:]
         if "{\"version\":1}" != line.rstrip() and "[" != line.rstrip():
-            jsonized_netatmo = {"name": "netatmo", "markup": "none",
-                                "full_text": getNetatmoData()}
-            out_json = json.loads(line)
-            out_json.insert(0, jsonized_netatmo)
-
+            try:
+                jsonized_netatmo = {"name": "netatmo", "markup": "none",
+                                    "full_text": getNetatmoData()}
+                out_json = json.loads(line)
+                out_json.insert(0, jsonized_netatmo)
+            except Exception as e:
+                out_json.insert(0, e.message)
             sys.stdout.write(json.dumps(out_json) + ",")
 
         else:
