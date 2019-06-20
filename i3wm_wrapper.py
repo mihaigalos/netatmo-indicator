@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import json
 import sys
 from netatmo_service_wrapper import Netatmo
@@ -10,7 +12,7 @@ if len(sys.argv) < 2:
 def getNetatmoData():
     credentials_file = sys.argv[1]
     (data, timestamp) = Netatmo(credentials_file).get_data()
-    return ", ".join(("{}={}".format(*i) for i in data.items()))
+    return " ".join(("{}={}°".format(*i) for i in data.items()))
 
 
 """
