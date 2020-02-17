@@ -19,13 +19,13 @@ class MakePlot:
         x= []
         y= [ [] for i in range(len(self.data.values()[1]))]
 
-        captions = [key for (key, value) in self.data.values()[0].iteritems()]
+        captions = [key for (key, value) in self.data.values()[0].items()]
 
         i = 0
-        for k,v in self.data.iteritems():
+        for k,v in self.data.items():
             x.append(k.split(" ")[1])
             i=0
-            for location, value in v.iteritems():
+            for location, value in v.items():
                 y[i].append(value)
                 i=i+1
         return (x, y, captions)

@@ -95,14 +95,14 @@ class EntryWindow(gtk.Window):
         self.metadata["ui"].update({label_name: switch})
 
     def add_preferences(self, prefs):
-        for k, v in prefs.iteritems():
+        for k, v in prefs.items():
             if type(prefs[k]) is not dict and k != "Autostart":
                 self.label_entry(k, v, self.vbox)
 
     def add_credentials(self, credentials):
         if not credentials:
             credentials = Credentials().make_default()
-        for k, v in credentials.iteritems():
+        for k, v in credentials.items():
             self.label_entry(k, v, self.vbox)
 
     def add_config_file_label(self):
@@ -186,7 +186,7 @@ class EntryWindow(gtk.Window):
             '~'), ".netatmo-indicator-preferences.yaml")
         credentials = {}
         excluded_keys = ["credentials_file", "Autostart"]
-        for k, v in self.metadata["ui"].iteritems():
+        for k, v in self.metadata["ui"].items():
             if k not in excluded_keys:
                 credentials.update({k: v.get_text()})
         return credentials, credentials_file, data_to_write, preferences_file
@@ -260,7 +260,7 @@ class Menu:
 
         if netatmo.exception is None:
             degree_sign = u'\N{DEGREE SIGN}'
-            for k, v in netatmo.data.iteritems():
+            for k, v in netatmo.data.items():
                 if k in aliases:
                     k = aliases[k]
                 display_string = display_string + \
