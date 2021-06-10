@@ -23,7 +23,7 @@ class Credentials:
             pass: <netatmo password>"""
         try:
             with open(credentials_file,'r') as stream:
-                return yaml.load(stream)
+                return yaml.safe_load(stream)
         except yaml.YAMLError as exc:
             pass
             #print(exc)
