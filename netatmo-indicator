@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 # -*- coding: utf-8 -*-
 
@@ -414,7 +414,7 @@ class NetatmoIndicator(object):
             exception = None
             self.netatmo = NetatmoContainer(data, timestamp, exception)
             self.write_json(timestamp, data)
-        except Exception, err:
+        except Exception as err:
             self.credentials = {}
             data = {}
             timestamp = "?"
@@ -429,7 +429,7 @@ class NetatmoIndicator(object):
             try:
                 data = json.load(f)
                 data.update(entry)
-            except Exception, err:
+            except Exception as err:
                 pass
             f.close()
 
@@ -474,7 +474,7 @@ class NetatmoIndicator(object):
         if os.path.exists(self.prefs_file):
             try:
                 with open(self.prefs_file) as f:
-                    result = yaml.load(f)
+                    result = yaml.safe_load(f)
                     f.close()
                     return result
             except yaml.YAMLError as exc:
@@ -486,7 +486,7 @@ class NetatmoIndicator(object):
                 yaml.dump(data_to_write, outfile, default_flow_style=False)
 
             with open(self.prefs_file) as infile:
-                return yaml.load(infile)
+                return yaml.safe_load(infile)
 
     def write_prefs_file(self, *args):
         with open(self.prefs_file, 'w') as f:
