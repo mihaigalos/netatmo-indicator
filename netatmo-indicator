@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python3
 
 # -*- coding: utf-8 -*-
 
@@ -414,7 +414,7 @@ class NetatmoIndicator(object):
             exception = None
             self.netatmo = NetatmoContainer(data, timestamp, exception)
             self.write_json(timestamp, data)
-        except Exception, err:
+        except Exception as err:
             self.credentials = {}
             data = {}
             timestamp = "?"
@@ -429,7 +429,7 @@ class NetatmoIndicator(object):
             try:
                 data = json.load(f)
                 data.update(entry)
-            except Exception, err:
+            except Exception as err:
                 pass
             f.close()
 
