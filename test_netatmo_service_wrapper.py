@@ -25,5 +25,6 @@ class NetatmoProvider(Provider):
         return " ".join(("{}:{}°".format(*i) for i in data.items()))
 
 
-NetatmoProvider("/home/mihai/.netatmo-credentials.yaml").get()
+result = NetatmoProvider("/home/mihai/.netatmo-credentials.yaml").get()
+print(result)
 
